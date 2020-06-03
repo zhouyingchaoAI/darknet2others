@@ -1,6 +1,6 @@
 ## Introduction
-A Conversion tool to convert YOLO v3 Darknet weights to TF Lite model
-(YOLO v3 in PyTorch > ONNX > TensorFlow > TF Lite).
+A Conversion tool to convert YOLO v3 Darknet weights to savedmodel
+(YOLO v3 in PyTorch > ONNX > TensorFlow > Savedmodel).
 
 ## Prerequisites
 - `python3`
