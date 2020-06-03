@@ -34,80 +34,18 @@ python3 onnx2tf.py
 ``` 
 The output file is `weights/yolov3.pb`.
 
-- **4. Preprocess pb file to avoid NCHW conv, 5-D ops, and Int64 ops:**
+- **4. quantize_weights freeze_graph :**
 ```
-python3 prep.py
+python3 tf_opti.py
 ``` 
-The output file is `weights/yolov3_prep.pb`.
+The output file is `weights/yolov3_opti.pb`.
 
-- **5. Use TOCO to convert pb -> tflite:**
+- **5. add nms and convert to savedmodel**
 ```
-toco --graph_def_file weights/yolov3_prep.pb \
-    --output_file weights/yolov3.tflite \
-    --output_format TFLITE \
-    --inference_type FLOAT \
-    --inference_input_type FLOAT \
-    --input_arrays input.1 \
-    --output_arrays concat_84
+python pb2savedmodel_batch.py
 ```
-The output file is `weights/yolov3.tflite`.
-Now, you can run `python3 tflite_detect.py` to detect objects in an image.
+Now, you can run `python savedmodel_detect.py` to detect objects in an image.
 
-## Quantization
-- **1. Install flatbuffers:**
-Please refer to [flatbuffers](https://google.github.io/flatbuffers/flatbuffers_guide_building.html).
-
-- **2. Download TFLite schema:**
-```
-wget https://github.com/tensorflow/tensorflow/raw/r1.15/tensorflow/lite/schema/schema.fbs
-```
-
-- **3. Run TOCO to convert and quantize pb -> tflite:**
-```
-toco --graph_def_file weights/yolov3_prep.pb \
-    --output_file weights/yolov3_quant.tflite \
-    --output_format TFLITE  \
-    --input_arrays input.1 \
-    --output_arrays concat_84 \
-    --post_training_quantize
-```
-The output file is `weights/yolov3_quant.tflite`.
-
-- **4. Convert tflite -> json:**
-```
-flatc -t --strict-json --defaults-json -o weights schema.fbs  -- weights/yolov3_quant.tflite
-```
-The output file is `weights/yolov3_quant.json`.
-
-- **5. Fix ReshapeOptions:**
-```
-python3 fix_reshape.py
-```
-The output file is `weights/yolov3_quant_fix_reshape.json`.
-
-- **6. Convert json -> tflite:**
-```
-flatc -b -o weights schema.fbs weights/yolov3_quant_fix_reshape.json
-```
-The output file is `weights/yolov3_quant_fix_reshape.tflite`.
-Now, you can run 
-```
-python3 tflite_detect.py --weights weights/yolov3_quant_fix_reshape.tflite
-``` 
-to detect objects in an image.
-
-## Auxiliary Files
-- **ONNX inference and detection:** `onnx_infer.py` and `onnx_detect.py`.
-- **TensorFlow inference and detection:** `tf_infer.py` and `tf_detect.py`.
-- **TF Lite inference, detection and debug:** `tflite_infer.py`, `tflite_detect.py` 
-and `tflite_debug.py`.
-
-## Known Issues
-- **The conversion code does not work with tensorflow==1.14.0:** Running prep.py cause protobuf error (Channel order issue in Conv2D).
-- **fix_shape.py does not fix shape attributes in TFLite tensors, which may cause unknown side effects.**
-
-## TODO
-- [x] **support quantized model**
 
 ## Acknowledgement
 We borrow PyTorch code from [ultralytics/yolov3](https://github.com/ultralytics/yolov3), 
