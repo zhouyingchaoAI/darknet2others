@@ -53,7 +53,7 @@ def detect(save_txt=False, save_img=False):
         # torch.onnx.export(model, img, 'weights/export.onnx', input_names=input_names, output_names=output_names, verbose=True, opset_version=9)
         torch.onnx.export(model,
                           img,
-                          'weights/export.onnx',
+                          opt.onnx,
                           # dynamic_axes={"input": {0: "batch"}, "output": {0: "batch"}},
                           input_names=input_names,
                           output_names=output_names,
@@ -64,7 +64,7 @@ def detect(save_txt=False, save_img=False):
 
         # Validate exported model
         import onnx
-        model = onnx.load('weights/export.onnx')  # Load the ONNX model
+        model = onnx.load(opt.onnx)  # Load the ONNX model
         onnx.checker.check_model(model)  # Check that the IR is well formed
         # print(onnx.helper.printable_graph(model.graph))  # Print a human readable representation of the graph
         return
@@ -171,9 +171,10 @@ def detect(save_txt=False, save_img=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cfg', type=str, default='cfg/yolov3_helmet.cfg', help='cfg file path')
+    parser.add_argument('--cfg', type=str, default='/home/zyc/Desktop/weights_space/cfg/yolov3_helmet.cfg', help='cfg file path')
     parser.add_argument('--data', type=str, default='data/coco.data', help='coco.data file path')
-    parser.add_argument('--weights', type=str, default='weights/yolov3-voc_42000.weights', help='path to weights file')
+    parser.add_argument('--weights', type=str, default='/home/zyc/Desktop/weights_space/weights/yolov3_helmet.weights', help='path to weights file')
+    parser.add_argument('--onnx', type=str, default='/home/zyc/Desktop/weights_space/tmp.onnx', help='path to weights file')
     parser.add_argument('--source', type=str, default='data/samples', help='source')  # input file/folder, 0 for webcam
     parser.add_argument('--output', type=str, default='output', help='output folder')  # output folder
     parser.add_argument('--img-size', type=int, default=416, help='inference size (pixels)')

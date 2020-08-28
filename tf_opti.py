@@ -1,7 +1,8 @@
 from tensorflow.tools.graph_transforms import TransformGraph
+from tensorflow.python import ops
 import tensorflow as tf
 import os
-from tensorflow.python import ops
+import argparse
 
 def get_graph_def_from_file(graph_filepath):
     tf.reset_default_graph()
@@ -31,9 +32,17 @@ transforms = ['remove_nodes(op=Identity)',
               'fold_constants(ignore_errors=true)',
               'fold_batch_norms',
               'quantize_weights']
-output_node_names = ["input", "Concat_376"]
 
-path = 'weights/yolov3.pb'
-opti_path = 'weights/yolov3_opti.pb'
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--tf', type=str, default='/home/zyc/Desktop/weights_space/tmp.pb', help='onnx file path')
+    parser.add_argument('--optf', type=str, default='/home/zyc/Desktop/weights_space/tmp_opti.pb', help='tf file path')
+    parser.add_argument('--spp', action='store_true', default=False, help='spp ')
+    opt = parser.parse_args()
 
-optimize_graph('', path, transforms, output_node_names, outname=opti_path)
+    if opt.spp:
+        output_node_names = ["input", "Concat_383"]
+    else:
+        output_node_names = ["input", "Concat_376"]
+
+    optimize_graph('', opt.tf, transforms, output_node_names, outname=opt.optf)

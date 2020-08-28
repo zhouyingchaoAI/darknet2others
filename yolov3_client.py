@@ -10,7 +10,7 @@ import datetime
 import core.utils as utilsa
 from PIL import Image
 
-URL = "http://192.168.60.228:8501/v1/models/mobilenet_helmet:predict"
+URL = "http://192.168.60.228:8501/v1/models/switchcard:predict"
 headers = {"content-type": "application/json"}
 
 

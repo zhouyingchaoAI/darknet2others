@@ -3,10 +3,19 @@ import cv2
 import numpy as np
 import random
 import colorsys
-# video_path      = "./docs/images/road.mp4"
+# video_path      = "./video/IMG_9142.MP4"
 video_path      = 0
+spp_flag = True
 
-path = '/home/zyc/Desktop/onnx_tflite_yolov3-dependabot-pip-tensorflow-gpu-1.15.2/weights/model/1'
+path = '/home/zyc/Desktop/weights_space/weights/savedmodels/yolov3_fire/1'
+
+def load_classes(path):
+    # Loads *.names file at 'path'
+    with open(path, 'r') as f:
+        names = f.read().split('\n')
+    return list(filter(None, names))  # filter removes empty strings (such as last line)
+
+classes_label = load_classes("weights/tools.names")
 
 def draw_bbox(image, image_size, bboxes, labels, scores, thread = 0.1):
 
@@ -26,13 +35,17 @@ def draw_bbox(image, image_size, bboxes, labels, scores, thread = 0.1):
             box = bboxes[k]
             class_ind = int(labels[k])
             bbox_color = colors[(class_ind)]
+            # if(class_ind == 0):
+            #     bbox_color = [255, 0, 0]
+            # else:
+            #     bbox_color = [0, 255, 0]
             bbox_thick = int(0.6 * (image_h + image_w) / 600)
             c1, c2 = (int(box[1]*image_size[1]), int(box[0]*image_size[0])), (int(box[3]*image_size[1]), int(box[2]*image_size[0]))
 
             cv2.rectangle(image, c1, c2, bbox_color, 2)
 
             if 1:
-                bbox_mess = '%s: %.2f' % (labels[class_ind], score)
+                bbox_mess = '%d: %.2f' % (class_ind, score)
                 t_size = cv2.getTextSize(bbox_mess, 0, fontScale, thickness=bbox_thick // 2)[0]
                 cv2.rectangle(image, c1, (c1[0] + t_size[0], c1[1] - t_size[1] - 3), bbox_color, -1)  # filled
 
@@ -50,6 +63,9 @@ with tf.Session(graph=tf.Graph()) as sess:
 
     vid = cv2.VideoCapture(video_path)
     while True:
+        # frame = cv2.imread("data/samples/test.jpg")
+        # return_value = True
+
         return_value, frame = vid.read()
         if return_value:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -59,24 +75,28 @@ with tf.Session(graph=tf.Graph()) as sess:
         frame_size = frame.shape[:2]
         print(frame_size)
         data_set = []
+        data_set.clear()
         image_jp = cv2.imencode('.jpg', frame)[1]
         image_jp = np.squeeze(image_jp, 1).tostring()
         data_set.append(image_jp)
         x = sess.graph.get_tensor_by_name('encoded_image_tensor:0')
         y1 = sess.graph.get_tensor_by_name('strided_slice_19:0')
-        y2 = sess.graph.get_tensor_by_name('Cast_2:0')
+        y2 = sess.graph.get_tensor_by_name('strided_slice_20:0')
         y3 = sess.graph.get_tensor_by_name('strided_slice_21:0')
         y4 = sess.graph.get_tensor_by_name('Tile:0')
 
+
+        data_set = np.expand_dims(np.asarray(data_set), axis=0)
+
         scores, classes, boxes, m4 = sess.run([y1, y2, y3, y4],
                           feed_dict={x: data_set})
-        image = draw_bbox(frame, frame_size, boxes[0], classes[0], scores[0], 0.5)
+        image = draw_bbox(frame, frame_size, boxes[0], classes[0], scores[0], 0.2)
         cv2.namedWindow("result", cv2.WINDOW_AUTOSIZE)
         result = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+        # cv2.imwrite("output/2020_7_9_tools_001.jpg", result)
         cv2.imshow("result", result)
         if cv2.waitKey(1) & 0xFF == ord('q'): break
 
-        data_set.clear()
 
 
 
